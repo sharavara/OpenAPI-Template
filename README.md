@@ -1,0 +1,2 @@
+# OpenAPI-Template
+OpenAPI Template
