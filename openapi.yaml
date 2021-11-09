@@ -1,0 +1,258 @@
+---
+openapi: 3.0.2
+info:
+  title: OpenAPI Template (openapi 3.0.2)
+  version: 1.0.0
+  description: This is generic description of API
+  contact:
+    name: IT Department
+    url: https://fecredit.com.vn
+    email: api-info@fecredit.com.vn
+servers:
+- url: https://staging.fema.fec.com.vn/service-name
+  description: Staging environment
+- url: https://prod.fec.com.vn/service-name
+  description: Production environment
+- url: https://dev.fema.fec.com.vn/service-name
+  description: Development Environment
+paths:
+  /ping:
+    summary: Information about service
+    description: Get information about service
+    get:
+      tags:
+      - ping
+      parameters:
+      - name: x-request-id
+        description: Request ID
+        schema:
+          format: uuid
+          type: string
+          example: F988C778-94EA-435E-81DE-5387454A8D55
+        in: header
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ping'
+              examples:
+                ok:
+                  value:
+                    nam: api name
+                    env: prod
+                    ver: 1.0.1
+                    srv: 2018-10-25T13:12:01.000Z
+          description: Successful operation
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+      operationId: ping
+      summary: Information about service
+      description: Get information about service
+    parameters:
+    - examples:
+        id:
+          value: '"4D2940FF-70EC-419B-B54C-B66571F19CC6"'
+      name: x-request-id
+      description: Request ID
+      schema:
+        format: uuid
+        type: string
+        example: F988C778-94EA-435E-81DE-5387454A8D55
+      in: header
+    - examples:
+        Vietnamese:
+          value: '"vn"'
+        English:
+          value: '"en"'
+      name: x-language
+      description: |-
+        Language of request/response
+        Default value: `en`
+      schema:
+        enum:
+        - vn
+        - en
+        type: string
+      in: header
+  /health:
+    summary: Service health check
+    get:
+      tags:
+      - ping
+      responses:
+        "200":
+          description: Service is ok
+        "500":
+          description: Service is not available
+      operationId: health
+      summary: Check service health
+components:
+  schemas:
+    pages:
+      description: Pagination
+      required:
+      - current
+      type: object
+      properties:
+        count:
+          format: int32
+          description: Total number of pages
+          type: integer
+        previous:
+          format: int32
+          description: Previous page number
+          type: integer
+        current:
+          format: int32
+          description: Current page
+          type: integer
+        next:
+          format: int32
+          description: Next page number
+          type: integer
+      example:
+        count: 75
+        previous: 4
+        current: 5
+        next: 6
+    message:
+      title: Root Type for message
+      description: Some message from the server
+      type: object
+      properties:
+        message:
+          description: Message field
+          type: string
+      example:
+        message: Unauthorized
+    ping:
+      title: Ping
+      description: Information about service
+      required:
+      - env
+      - nam
+      - srv
+      - ver
+      type: object
+      properties:
+        nam:
+          description: Name of the service
+          type: string
+        env:
+          description: Environment
+          enum:
+          - prod
+          - test
+          - dev
+          type: string
+        ver:
+          description: Service version
+          type: string
+        srv:
+          format: date-time
+          description: Server time
+          type: string
+      example:
+        nam: api name
+        env: prod
+        ver: 1.0.1
+        srv: 2018-10-25T13:12:01Z
+      x-examples:
+        ok:
+          nam: api name
+          env: prod
+          ver: 1.0.1
+          srv: 2018-10-25T13:12:01.000Z
+    error:
+      description: Error object
+      required:
+      - error_code
+      type: object
+      properties:
+        error_code:
+          description: Error code
+          type: string
+        error_message:
+          description: Error message
+          type: string
+  responses:
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+          examples:
+            example-1:
+              value:
+                error:
+                  code: some text
+                  message: some text
+                  data:
+                    field_1:
+                    - message
+                    field_2:
+                    - message
+      description: Bad Request
+    InternalServerError:
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/error'
+          examples:
+            Internal Server Error:
+              value:
+              - error_code: ERR-001
+                error_message: DB is not available
+            Many errors:
+              value:
+              - error_code: ERR-001
+                error_message: DB is not available
+              - error_code: ERR-002
+                error_message: Queue Manager is not available
+      description: Internal Server Error
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/message'
+          examples:
+            Unauthorized:
+              value:
+                message: Unauthorized
+      description: Unauthorized request
+  securitySchemes:
+    roles:
+      flows:
+        implicit:
+          authorizationUrl: https://staging.fec.com.vn/auth/token
+          refreshUrl: https://staging.fema.fec.com.vn/auth/refresh
+          scopes:
+            read: read data
+            write: write data
+      type: oauth2
+      description: |-
+        Each request should have API key in JWT format:
+        ```json
+        {
+          "iss": "fecredit",
+          "iat": 1562638489,
+          "user": "user_or_service_id",
+          "scopes": {
+            "service_name": [
+              "read"
+            ]
+          },
+          "exp": 1562638789
+        }
+
+        ```
+tags:
+- name: ping
+  description: Information about service
+- name: method
+  description: Information about methods of group
